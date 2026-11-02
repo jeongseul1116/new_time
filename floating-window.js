@@ -95,6 +95,8 @@ body[data-timer-view="circle"] #mini-timer-state { display: none; }
 .task-footer { display:flex;align-items:center;justify-content:space-between;gap:8px; }
 .task-footer button { padding:0;background:none;color:var(--accent);font-size:9px;line-height:12px; }
 body[data-clock-mode="timer"] #mini-pomo-count { visibility:hidden; }
+body[data-clock-mode="pomodoro"] #mini-task-picker-toggle { display:none; }
+body[data-clock-mode="pomodoro"] .task-footer { justify-content:center; }
 .settings-panel { top:54px;padding:12px; }
 .settings-heading { margin-bottom:8px; }
 .settings-phase { display:flex;gap:4px; }

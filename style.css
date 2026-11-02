@@ -8,3 +8,5 @@
 .timer-view-switch{display:flex;justify-content:center;gap:2px;width:132px;margin:18px auto 0;padding:3px;background:#303034;border-radius:7px}.timer-view-switch button{flex:1;padding:5px 8px;color:#8e8e93;font-size:10px;border-radius:5px}.timer-view-switch button[aria-pressed="true"]{background:#515154;color:#ff9f0a}.timer-view-switch button:disabled{opacity:.35;cursor:default}.clock[data-timer-view]{position:relative;border:0}.clock .timer-dial{position:absolute;inset:0;width:100%;height:100%;display:none}.clock[data-timer-view="circle"] .timer-dial{display:block}.timer-dial circle{fill:none;stroke-width:28}.timer-dial .dial-track{stroke:#2c2c2f}.timer-dial .dial-remaining{stroke:#ff9f0a;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center}.clock>span,.clock>small{position:relative;z-index:1}
 
 .clock[data-timer-view="circle"]>#timer,.clock[data-timer-view="circle"]>#timer-state{display:none}
+
+.standalone-pomo{margin-top:18px;padding:10px 16px;background:#33250f;border-radius:8px;color:#ff9f0a;font-size:12px}

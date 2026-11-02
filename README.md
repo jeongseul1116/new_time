@@ -15,7 +15,7 @@
 
 ## Windows에서 바로 실행
 
-[Windows EXE 다운로드 페이지](https://github.com/jeongseul1116/new_time/releases/latest)에서 **Chagok-1.1.1-Windows.exe**를 다운로드하고 더블클릭하세요. Node.js나 터미널이 필요 없는 Windows 10/11 64비트용 포터블 앱입니다. 업데이트할 때는 기존 차곡 앱을 완전히 종료한 뒤 새 EXE를 실행하세요. 저장된 작업과 기록은 유지됩니다.
+[Windows EXE 다운로드 페이지](https://github.com/jeongseul1116/new_time/releases/latest)에서 **Chagok-1.2.0-Windows.exe**를 다운로드하고 더블클릭하세요. Node.js나 터미널이 필요 없는 Windows 10/11 64비트용 포터블 앱입니다. 업데이트할 때는 기존 차곡 앱을 완전히 종료한 뒤 새 EXE를 실행하세요. 저장된 작업과 기록은 유지됩니다.
 
 - 실행하면 480×210 작은 시계 창이 열리고 항상 위에 표시됩니다. 저장된 작업이 없으면 작업 설계 화면도 함께 열립니다.
 - 작은 창 왼쪽의 **작업 설계 ↗**를 누르면 코스와 작업을 만들고 세부 작업·예상 시간을 입력할 수 있습니다. **작업 목록**에서 실행할 작업을 선택하면 해당 예상 시간으로 타이머가 시작됩니다. 포모도로는 별도 모드로 선택합니다.
@@ -51,6 +51,12 @@ npm start
 
 ## 포모도로
 
+코스나 작업 등록 없이 **포모도로** 모드에서 바로 시작할 수 있습니다. 작업 설계 화면이 비어 있을 때는 **작업 없이 포모도로만 사용하기**를 눌러 작은 창으로 열 수도 있습니다. 마지막으로 선택한 모드가 저장되며, 포모도로로 재실행할 때는 작업 설계 화면을 자동으로 열지 않습니다.
+
+포모도로 실행은 기존 작업의 소요 시간·완료 상태와 분리됩니다. **집중 완료 / 휴식 완료**는 해당 단계를 끝내고 다음 단계를 준비하며, 작업을 완료 처리하지 않습니다. 집중 시간과 완료 횟수는 별도로 자동 기록되고 휴식은 집중 시간에 포함되지 않습니다.
+
+![작업 없이 사용하는 포모도로](screenshots/chagok-pomodoro-only.png)
+
 기본 집중 25분·휴식 5분으로 시작합니다. 본 화면과 작은 창에서 각각 1~180분으로 설정할 수 있으며 브라우저에 자동 저장됩니다. 현재 단계의 시간을 바꾸면 측정을 멈추고 해당 세션을 초기화하며, 누적 작업 시간은 유지합니다. 집중 종료 시 완료 횟수를 기록하고 휴식 준비로 전환합니다. 다음 단계는 시작 버튼을 눌러 진행합니다. 휴식은 작업 집중 시간에 포함되지 않습니다.
 
 작은 시계 창은 480×210 크기의 가로형 레이아웃입니다. 왼쪽에 시간과 진행률, 오른쪽에 작업명과 원형 조작 버튼을 배치했습니다. 왼쪽 제목 옆 설정 아이콘에서 집중·휴식 시간을 변경합니다. 재설정·시작·완료는 같은 크기의 원형 버튼으로, 동일한 간격을 두고 배치했습니다.
@@ -71,7 +77,7 @@ npm run desktop
 npm run dist:win
 ```
 
-`release/Chagok-1.1.1-Windows.exe`에 포터블 실행 파일을 생성합니다. 앱 소스는 Electron의 격리된 렌더러에서 실행하며 런타임을 함께 패키징합니다. GitHub Actions의 **Build Windows EXE** 워크플로가 Windows에서 빌드하고 Windows Defender 검사와 빌드 출처 증명을 완료한 뒤 버전별 릴리스에 EXE를 올립니다. 이미 게시한 버전의 파일은 덮어쓰지 않습니다.
+`release/Chagok-1.2.0-Windows.exe`에 포터블 실행 파일을 생성합니다. 앱 소스는 Electron의 격리된 렌더러에서 실행하며 런타임을 함께 패키징합니다. GitHub Actions의 **Build Windows EXE** 워크플로가 Windows에서 빌드하고 Windows Defender 검사와 빌드 출처 증명을 완료한 뒤 버전별 릴리스에 EXE를 올립니다. 이미 게시한 버전의 파일은 덮어쓰지 않습니다.
 
 현재 EXE는 코드 서명 인증서가 없는 빌드입니다. Windows에서 게시자 확인 경고가 표시될 수 있습니다.
 
@@ -88,11 +94,11 @@ npm run dist:win
 Windows PowerShell에서 다운로드한 파일의 해시를 확인할 수 있습니다. 출력된 값을 공식 릴리스의 `SHA256SUMS.txt`에 적힌 값과 비교하세요.
 
 ```powershell
-Get-FileHash .\Chagok-1.1.1-Windows.exe -Algorithm SHA256
+Get-FileHash .\Chagok-1.2.0-Windows.exe -Algorithm SHA256
 ```
 
 GitHub CLI를 사용하는 경우 빌드 출처도 확인할 수 있습니다.
 
 ```sh
-gh attestation verify Chagok-1.1.1-Windows.exe --repo jeongseul1116/new_time
+gh attestation verify Chagok-1.2.0-Windows.exe --repo jeongseul1116/new_time
 ```
