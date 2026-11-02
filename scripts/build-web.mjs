@@ -1,10 +1,10 @@
+import { webFiles as files } from './web-files.mjs';
 import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const output=path.join(root,'_site');
-const files=['index.html','style.css','app.js','floating-window.js','reverse-tracking.js','web-app.js','manifest.webmanifest','icons/icon.svg','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png'];
 const digest=createHash('sha256');
 for(const file of [...files,'sw.js']){digest.update(file);digest.update(await readFile(path.join(root,file)));}
 const version=digest.digest('hex').slice(0,16);
