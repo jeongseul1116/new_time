@@ -25,6 +25,11 @@ button { border: 0; }
 }
 .time-heading { display: flex; align-items: center; justify-content: space-between; min-width: 0; }
 .time-heading h1 { margin: 0; color: var(--accent); font-size: 13px; line-height: 20px; font-weight: 500; }
+.heading-tools { display: flex; align-items: center; gap: 8px; }
+.view-switch { display: grid; grid-template-columns: repeat(2, 24px); padding: 2px; background: #28282b; border-radius: 7px; }
+.view-switch button { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border-radius: 5px; background: transparent; color: var(--muted); font-size: 10px; }
+.view-switch button[aria-pressed="true"] { color: var(--accent); background: #4a4a4d; }
+.view-switch button:disabled { opacity: .35; cursor: default; }
 .settings-toggle {
   padding: 4px; width: 28px; height: 28px; display: grid; place-items: center;
   color: var(--muted); background: transparent; border-radius: 7px;
@@ -50,6 +55,16 @@ body[data-long-time="true"] #mini-timer { font-size: 46px; letter-spacing: -2px;
 #mini-timer-state { margin-top: 7px; font-size: 10px; line-height: 14px; color: var(--muted); }
 .pomo-track { margin-top: auto; height: 2px; background: #303033; border-radius: 2px; flex-shrink: 0; overflow: hidden; }
 #mini-pomo-progress { height: 100%; background: var(--accent); }
+.timer-dial { display: none; }
+body[data-timer-view="circle"] .readout { position: relative; align-items: center; justify-content: center; }
+body[data-timer-view="circle"] .timer-dial { display: block; position: absolute; inset: 0; width: 114px; height: 114px; margin: auto; }
+.timer-dial circle { fill: none; stroke-width: 3; }
+.timer-dial .dial-track { stroke: #303033; }
+.timer-dial .dial-remaining { stroke: var(--accent); stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; }
+body[data-timer-view="circle"] .time-accent, body[data-timer-view="circle"] .pomo-track { display: none; }
+body[data-timer-view="circle"] #mini-timer { margin: 0; font-size: 26px; line-height: 32px; letter-spacing: -1px; z-index: 1; }
+body[data-timer-view="circle"][data-long-time="true"] #mini-timer { font-size: 22px; }
+body[data-timer-view="circle"] #mini-timer-state { margin-top: 4px; font-size: 8px; z-index: 1; }
 .task-panel { min-width: 0; display: grid; grid-template-rows: 18px 52px 12px; row-gap: 16px; }
 #mini-focus-name {
   margin: 0; font-size: 12px; line-height: 18px; font-weight: 400; color: #c5c5cb;
@@ -89,15 +104,22 @@ const markup = `
 <main class="clock-layout" aria-label="작은 시계">
   <div class="time-heading">
     <h1>타이머</h1>
+    <div class="heading-tools">
+      <div class="view-switch" role="group" aria-label="타이머 표시 방식">
+        <button id="mini-view-numeric" aria-label="숫자 보기" title="숫자 보기" aria-pressed="true">12</button>
+        <button id="mini-view-circle" aria-label="원형 보기" title="원형 보기" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" opacity=".3"/><path d="M8 2.5a5.5 5.5 0 0 1 5.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+      </div>
     <button class="settings-toggle" id="mini-settings-toggle" aria-label="시간 설정" aria-expanded="false" aria-controls="mini-settings">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m10 3 4 0 .6 2.5 2 .9 2.3-.8 2 3.5-1.8 1.7v2.4l1.8 1.7-2 3.5-2.3-.8-2 .9L14 21h-4l-.6-2.5-2-.9-2.3.8-2-3.5 1.8-1.7v-2.4L3.1 9.1l2-3.5 2.3.8 2-.9Z"/></svg>
     </button>
+    </div>
   </div>
   <div class="pomo-tabs" role="group" aria-label="집중 또는 휴식">
     <button id="mini-pomo-focus">집중</button>
     <button id="mini-pomo-break">휴식</button>
   </div>
   <section class="readout" aria-label="남은 시간">
+    <svg class="timer-dial" viewBox="0 0 114 114" aria-hidden="true"><circle class="dial-track" cx="57" cy="57" r="53"/><circle class="dial-remaining" id="mini-dial-remaining" cx="57" cy="57" r="53" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg>
     <div class="time-accent" aria-hidden="true"></div>
     <span id="mini-timer"></span>
     <small id="mini-timer-state"></small>
@@ -120,7 +142,7 @@ const markup = `
   <label><span>휴식</span><input id="mini-break-minutes" type="number" min="1" max="180" aria-label="휴식 시간"> 분</label>
 </section>`;
 
-export function createFloatingClock(doc, { onAction, onDurationChange }) {
+export function createFloatingClock(doc, { onAction, onDurationChange, onViewChange }) {
   doc.documentElement.lang = 'ko';
   doc.head.innerHTML = '<meta name="viewport" content="width=device-width,initial-scale=1"><title>차곡 · 시계</title>';
   const style = doc.createElement('style');
@@ -145,6 +167,9 @@ export function createFloatingClock(doc, { onAction, onDurationChange }) {
   });
   for (const id of ['toggle', 'reset', 'complete', 'pomo-focus', 'pomo-break']) {
     doc.getElementById('mini-' + id).onclick = () => onAction(id);
+  }
+  for (const view of ['numeric', 'circle']) {
+    doc.getElementById('mini-view-' + view).onclick = () => onViewChange(view);
   }
   for (const id of ['focus-minutes', 'break-minutes']) {
     doc.getElementById('mini-' + id).onchange = event => onDurationChange(id, event.target.value);

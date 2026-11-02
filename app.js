@@ -5,6 +5,7 @@ let clockMode="pomodoro",floatingWindow=null;
 const uid=()=>crypto.randomUUID();
 const seed=()=>({courses:[{id:uid(),name:'나만의 사이드 프로젝트',tasks:[{id:uid(),name:'아이디어 정리하기',minutes:30,elapsed:0,done:false,children:[]},{id:uid(),name:'서비스 화면 설계하기',minutes:90,elapsed:0,done:false,children:[{id:uid(),name:'레퍼런스 찾아보기',minutes:20,elapsed:0,done:false,children:[]},{id:uid(),name:'와이어프레임 그리기',minutes:40,elapsed:0,done:false,children:[]},{id:uid(),name:'디자인 다듬기',minutes:30,elapsed:0,done:false,children:[]}]},{id:uid(),name:'오늘의 작업 회고',minutes:15,elapsed:0,done:false,children:[]}]},{id:uid(),name:'나를 위한 작은 루틴',tasks:[{id:uid(),name:'책 읽고 생각 기록하기',minutes:20,elapsed:0,done:false,children:[]}]}],active:null,started:null});
 let state;try{state=JSON.parse(localStorage.getItem('chagok-v1'))}catch{}if(!state?.courses)state=seed();
+state.timerView = state.timerView === "circle" ? "circle" : "numeric";
 state.pomo ||= {phase:'focus',elapsed:0,started:null,rounds:0};
 state.pomo.focusMinutes ||= 25;state.pomo.breakMinutes ||= 5;
 const pomoDuration=()=>60*(state.pomo.phase==='focus'?state.pomo.focusMinutes:state.pomo.breakMinutes);
@@ -45,6 +46,10 @@ function syncFloating(){
  }
  for(const id of ['focus-minutes','break-minutes']){const input=doc.getElementById('mini-'+id);if(input&&doc.activeElement!==input)input.value=document.getElementById(id).value;}
  doc.body.dataset.phase=state.pomo.phase;
+ doc.body.dataset.timerView=effectiveTimerView();
+ for(const view of ['numeric','circle'])doc.getElementById('mini-view-'+view).setAttribute('aria-pressed',String(effectiveTimerView()===view));
+ doc.getElementById('mini-view-circle').disabled=clockMode==='stopwatch';
+ doc.getElementById('mini-dial-remaining').setAttribute('stroke-dashoffset',String(100*(1-remainingFraction())));
  doc.body.dataset.longTime=String($('#timer').textContent.length>5);
  if(clockMode==='pomodoro'){const p=state.pomo;doc.getElementById('mini-timer-state').textContent=`${p.phase==='focus'?p.focusMinutes:p.breakMinutes}분 · ${p.phase==='focus'?'집중':'휴식'} ${p.started?'중':'준비'}`;}
  for(const phase of ['focus','break'])doc.getElementById('mini-pomo-'+phase).setAttribute('aria-pressed',String(state.pomo.phase===phase));
@@ -60,7 +65,8 @@ $('#float-timer').onclick=async()=>{
   const doc=floatingWindow.document;
   createFloatingClock(doc, {
     onAction: id => { document.getElementById(id).click(); syncFloating(); },
-    onDurationChange: (id, value) => { setPomoMinutes(id, value); syncFloating(); }
+    onDurationChange: (id, value) => { setPomoMinutes(id, value); syncFloating(); },
+    onViewChange: view => setTimerView(view)
   });
   syncFloating();
   if(!pinned)toast('별도 창을 열었어요. 항상 위 고정은 데스크톱 Chrome·Edge에서 지원됩니다.');
@@ -79,6 +85,7 @@ function updateTimer(){
  if(clockMode==='pomodoro'){
   const remaining=Math.max(0,pomoDuration()-pomoSeconds());$('#timer').textContent=`${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(Math.floor(remaining)%60).padStart(2,'0')}`;$('#timer-state').textContent=isFocus?(p.started?'지금은 집중하는 시간':`${p.focusMinutes}분, 한 가지에만 집중하세요`):(p.started?'잠시 쉬어가세요':`${p.breakMinutes}분 휴식 준비`);$('#toggle').textContent=p.started?'일시 정지':'시작';$('#toggle').classList.toggle('running',Boolean(p.started));if(!isFocus){$('#focus-name').textContent='잠깐의 쉼, 다음 집중을 위해';$('#focus-course').textContent='스트레칭하거나 물 한 잔 마셔보세요.'}
  }
+ updateTimerView();
  syncFloating();
 }
 const originalToggle=$('#toggle').onclick;
@@ -96,3 +103,27 @@ function setPomoMinutes(id,value){
  toast('시간을 저장했어요.'+(state.pomo.phase===phase?' 현재 세션은 처음부터 준비됩니다.':''));
 }
 for(const id of ['focus-minutes','break-minutes'])document.getElementById(id).onchange=e=>setPomoMinutes(id,e.target.value);
+
+function effectiveTimerView(){return clockMode==='stopwatch'?'numeric':state.timerView}
+function remainingFraction(){
+ if(clockMode==='stopwatch')return 1;
+ const t=active();
+ const duration=clockMode==='pomodoro'?pomoDuration():(t?.minutes||0)*60;
+ const elapsed=clockMode==='pomodoro'?pomoSeconds():(t?seconds(t):0);
+ return duration?Math.max(0,Math.min(1,1-elapsed/duration)):0;
+}
+function updateTimerView(){
+ const view=effectiveTimerView();
+ document.querySelector('.clock').dataset.timerView=view;
+ for(const type of ['numeric','circle'])$('#view-'+type).setAttribute('aria-pressed',String(view===type));
+ $('#view-circle').disabled=clockMode==='stopwatch';
+ const fraction=remainingFraction();
+ $('#dial-remaining').setAttribute('stroke-dashoffset',String(100*(1-fraction)));
+ $('#timer-dial').setAttribute('aria-label',`남은 시간 ${Math.round(fraction*100)}퍼센트`);
+}
+function setTimerView(view){
+ if(!['numeric','circle'].includes(view)||clockMode==='stopwatch')return;
+ state.timerView=view;save();updateTimerView();syncFloating();
+}
+$('#view-numeric').onclick=()=>setTimerView('numeric');
+$('#view-circle').onclick=()=>setTimerView('circle');
