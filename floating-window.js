@@ -52,7 +52,7 @@ button { border: 0; }
   letter-spacing: -2.5px; font-weight: 200; font-variant-numeric: tabular-nums;
   white-space: nowrap; text-align: left;
 }
-body[data-long-time="true"] #mini-timer { font-size: 46px; letter-spacing: -2px; }
+body[data-long-time="true"] #mini-timer { font-size: 40px; letter-spacing: -2px; }
 #mini-timer-state { margin-top: 7px; font-size: 10px; line-height: 14px; color: var(--muted); }
 .pomo-track { margin-top: auto; height: 2px; background: #303033; border-radius: 2px; flex-shrink: 0; overflow: hidden; }
 #mini-pomo-progress { height: 100%; background: var(--accent); }
@@ -92,6 +92,27 @@ body[data-timer-view="circle"] #mini-timer-state { display: none; }
 .settings-panel label { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #b4b4ba; font-size: 11px; }
 .settings-panel label span { flex: 1; }
 .settings-panel input { min-width: 0; width: 50px; padding: 4px; background: #333336; color: #fff; border: 1px solid #505054; border-radius: 5px; text-align: center; font-size: 12px; }
+.task-footer { display:flex;align-items:center;justify-content:space-between;gap:8px; }
+.task-footer button { padding:0;background:none;color:var(--accent);font-size:9px;line-height:12px; }
+body[data-clock-mode="timer"] #mini-pomo-count { visibility:hidden; }
+.settings-panel { top:54px;padding:12px; }
+.settings-heading { margin-bottom:8px; }
+.settings-phase { display:flex;gap:4px; }
+.settings-phase button { flex:1;padding:4px 0;border-radius:5px;background:#333336;color:#999;font-size:9px; }
+.settings-phase .selected { background:#515154;color:var(--accent); }
+.task-picker { position:absolute;z-index:3;inset:60px 24px 16px;background:#242426;border:1px solid #49494c;border-radius:10px;display:flex;flex-direction:column;box-shadow:0 8px 24px #0008;overflow:hidden; }
+.picker-heading { display:flex;align-items:center;gap:12px;padding:9px 12px;border-bottom:1px solid #39393c;flex-shrink:0; }
+.picker-heading strong { flex:1;font-size:11px;font-weight:500; }
+.picker-heading button { background:none;color:var(--accent);font-size:10px;padding:0; }
+#mini-picker-close { color:#999;font-size:16px; }
+#mini-task-list { overflow:auto;min-height:0;padding:4px 0; }
+.picker-course { margin:6px 12px 3px;font-size:9px;color:#8e8e93; }
+.picker-task { display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:7px 12px;background:none;color:#ddd;font-size:11px; }
+.picker-task:hover,.picker-task[aria-current="true"] { background:#3b3020; }
+.picker-task:disabled { color:#747479;cursor:default; }
+.picker-task span:first-child { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.picker-task small { flex-shrink:0;color:#999;font-size:9px; }
+.picker-empty { color:#999;font-size:11px;margin:12px; }
 @media (max-width: 459px) {
   body { padding: 20px; }
   .clock-layout { grid-template-columns: 40% minmax(0, 1fr); column-gap: 24px; }
@@ -116,8 +137,8 @@ const markup = `
     </div>
   </div>
   <div class="pomo-tabs" role="group" aria-label="집중 또는 휴식">
-    <button id="mini-pomo-focus">집중</button>
-    <button id="mini-pomo-break">휴식</button>
+    <button id="mini-mode-timer">작업 타이머</button>
+    <button id="mini-mode-pomodoro">포모도로</button>
   </div>
   <section class="readout" aria-label="남은 시간">
     <svg class="timer-dial" viewBox="0 0 114 114" aria-hidden="true"><circle class="dial-track" cx="57" cy="57" r="46"/><circle class="dial-remaining" id="mini-dial-remaining" cx="57" cy="57" r="46" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg>
@@ -134,16 +155,21 @@ const markup = `
       <button id="mini-toggle" class="primary">시작</button>
       <button id="mini-complete">완료</button>
     </div>
-    <p id="mini-pomo-count"></p>
+<div class="task-footer"><button id="mini-task-picker-toggle" aria-expanded="false" aria-controls="mini-task-picker">작업 목록 ▾</button><p id="mini-pomo-count"></p></div>
   </section>
 </main>
 <section class="settings-panel" id="mini-settings" aria-label="포모도로 시간 설정" hidden>
-  <div class="settings-heading"><strong>시간 설정</strong><button id="mini-settings-done">완료</button></div>
+  <div class="settings-heading"><strong>포모도로 시간</strong><button id="mini-settings-done">완료</button></div>
+  <div class="settings-phase" role="group" aria-label="포모도로 단계"><button id="mini-pomo-focus">집중</button><button id="mini-pomo-break">휴식</button></div>
   <label><span>집중</span><input id="mini-focus-minutes" type="number" min="1" max="180" aria-label="집중 시간"> 분</label>
   <label><span>휴식</span><input id="mini-break-minutes" type="number" min="1" max="180" aria-label="휴식 시간"> 분</label>
+</section>
+<section class="task-picker" id="mini-task-picker" aria-label="계획한 작업 목록" hidden>
+  <div class="picker-heading"><strong>계획한 작업</strong><button id="mini-picker-plan">추가·설계 ↗</button><button id="mini-picker-close" aria-label="작업 목록 닫기">×</button></div>
+  <div id="mini-task-list"></div>
 </section>`;
 
-export function createFloatingClock(doc, { onAction, onDurationChange, onViewChange, onOpenPlanner }) {
+export function createFloatingClock(doc, { onAction, onDurationChange, onViewChange, onOpenPlanner, onSelectTask }) {
   doc.documentElement.lang = 'ko';
   doc.head.innerHTML = '<meta name="viewport" content="width=device-width,initial-scale=1"><title>차곡 · 시계</title>';
   const style = doc.createElement('style');
@@ -153,9 +179,17 @@ export function createFloatingClock(doc, { onAction, onDurationChange, onViewCha
 
   if (onOpenPlanner) {
     const title = doc.querySelector('.time-heading h1');
-    title.innerHTML = '<button title="작업 설계 열기" aria-label="작업 설계 열기">타이머 ↗</button>';
+    title.innerHTML = '<button title="코스와 세부 작업 설계" aria-label="작업 설계 열기">작업 설계 ↗</button>';
     title.firstElementChild.onclick = onOpenPlanner;
   }
+
+  const picker = doc.getElementById('mini-task-picker');
+  const pickerTrigger = doc.getElementById('mini-task-picker-toggle');
+  const closePicker = () => { picker.hidden=true;pickerTrigger.setAttribute('aria-expanded','false'); };
+  pickerTrigger.onclick = () => { picker.hidden=!picker.hidden;pickerTrigger.setAttribute('aria-expanded',String(!picker.hidden));doc.getElementById('mini-settings').hidden=true; };
+  doc.getElementById('mini-picker-close').onclick = closePicker;
+  doc.getElementById('mini-picker-plan').onclick = () => { closePicker();onOpenPlanner?.(); };
+  doc.getElementById('mini-task-list').onclick = event => {const button=event.target.closest('[data-task-id]');if(button){closePicker();onSelectTask(button.dataset.taskId)}};
 
   const panel = doc.getElementById('mini-settings');
   const trigger = doc.getElementById('mini-settings-toggle');
@@ -164,15 +198,15 @@ export function createFloatingClock(doc, { onAction, onDurationChange, onViewCha
     trigger.setAttribute('aria-expanded', String(open));
     if (!open) trigger.focus();
   };
-  trigger.onclick = () => setSettingsOpen(panel.hidden);
+  trigger.onclick = () => {closePicker();setSettingsOpen(panel.hidden)};
   doc.getElementById('mini-settings-done').onclick = () => setSettingsOpen(false);
   doc.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !panel.hidden) setSettingsOpen(false);
+    if (event.key === 'Escape'){closePicker();if(!panel.hidden)setSettingsOpen(false);}
   });
   doc.addEventListener('click', event => {
     if (!panel.hidden && !panel.contains(event.target) && !trigger.contains(event.target)) setSettingsOpen(false);
   });
-  for (const id of ['toggle', 'reset', 'complete', 'pomo-focus', 'pomo-break']) {
+  for (const id of ['toggle', 'reset', 'complete', 'pomo-focus', 'pomo-break', 'mode-timer', 'mode-pomodoro']) {
     doc.getElementById('mini-' + id).onclick = () => onAction(id);
   }
   for (const view of ['numeric', 'circle']) {
@@ -188,4 +222,25 @@ export function updateRemainingRing(element, fraction) {
   const remaining = Math.max(0, Math.min(1, fraction));
   element.setAttribute('stroke-dashoffset', String(100 * (1 - remaining)));
   element.setAttribute('visibility', remaining === 0 ? 'hidden' : 'visible');
+}
+
+const pickerSignatures = new WeakMap();
+export function updateTaskPicker(doc, courses, activeId) {
+  const signature=JSON.stringify([courses.map(c=>[c.id,c.name,c.tasks.map(t=>[t.id,t.name,t.minutes,t.done,t.children.map(x=>[x.id,x.name,x.minutes,x.done])])]),activeId]);
+  if(pickerSignatures.get(doc)===signature)return;
+  pickerSignatures.set(doc,signature);
+  const list=doc.getElementById('mini-task-list');list.replaceChildren();
+  let count=0;
+  for(const course of courses){
+    const tasks=course.tasks.flatMap(t=>t.children.length?t.children.map(child=>({...child,name:t.name+' › '+child.name})):[t]);
+    if(!tasks.length)continue;
+    const title=doc.createElement('p');title.className='picker-course';title.textContent=course.name;list.append(title);
+    for(const task of tasks){
+      count++;
+      const button=doc.createElement('button');button.className='picker-task';button.dataset.taskId=task.id;button.disabled=task.done;button.setAttribute('aria-current',String(task.id===activeId));
+      const name=doc.createElement('span');name.textContent=(task.done?'✓ ':'')+task.name;
+      const estimate=doc.createElement('small');estimate.textContent=task.minutes+'분';button.append(name,estimate);list.append(button);
+    }
+  }
+  if(!count){const p=doc.createElement('p');p.className='picker-empty';p.textContent='추가·설계에서 코스와 작업을 만들어 주세요.';list.append(p)}
 }

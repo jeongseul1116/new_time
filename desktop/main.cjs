@@ -130,7 +130,7 @@ function createController() {
         autoHideMenuBar: true,
         show: true,
         backgroundColor: '#101012',
-    icon: path.join(__dirname, 'icon.png'),
+        icon: path.join(__dirname, 'icon.png'),
         webPreferences: {
           preload: PRELOAD,
           nodeIntegration: false,

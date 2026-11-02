@@ -15,10 +15,10 @@
 
 ## Windows에서 바로 실행
 
-[Windows EXE 다운로드 페이지](https://github.com/jeongseul1116/new_time/releases/tag/windows-latest)에서 **Chagok-1.0.0-Windows.exe**를 다운로드하고 더블클릭하세요. Node.js나 터미널이 필요 없는 Windows 10/11 64비트용 포터블 앱입니다.
+[Windows EXE 다운로드 페이지](https://github.com/jeongseul1116/new_time/releases/tag/windows-latest)에서 **Chagok-1.1.0-Windows.exe**를 다운로드하고 더블클릭하세요. Node.js나 터미널이 필요 없는 Windows 10/11 64비트용 포터블 앱입니다. 업데이트할 때는 기존 차곡 앱을 완전히 종료한 뒤 새 EXE를 실행하세요. 저장된 작업과 기록은 유지됩니다.
 
-- 실행하면 480×210 작은 시계 창이 바로 열리고 항상 위에 표시됩니다.
-- 왼쪽 **타이머 ↗**를 누르면 코스와 작업을 설계하는 화면을 엽니다.
+- 실행하면 480×210 작은 시계 창이 열리고 항상 위에 표시됩니다. 저장된 작업이 없으면 작업 설계 화면도 함께 열립니다.
+- 작은 창 왼쪽의 **작업 설계 ↗**를 누르면 코스와 작업을 만들고 세부 작업·예상 시간을 입력할 수 있습니다. **작업 목록**에서 실행할 작업을 선택하면 해당 예상 시간으로 타이머가 시작됩니다. 포모도로는 별도 모드로 선택합니다.
 - 집중·휴식 시간과 기록은 PC의 앱 데이터에 자동 저장됩니다.
 - 처음 실행할 때는 GitHub EXE의 압축 해제와 초기화에 잠시 시간이 걸릴 수 있습니다.
 
@@ -45,6 +45,10 @@ npm start
 
 ![작은 시계 창](screenshots/chagok-floating.png)
 
+**작업 목록**을 누르면 계획한 작업과 예상 시간을 확인하고 실행할 작업을 고를 수 있습니다. 편집은 **작업 설계 ↗**에서 진행합니다.
+
+![계획한 작업 선택](screenshots/chagok-task-picker.png)
+
 ## 포모도로
 
 기본 집중 25분·휴식 5분으로 시작합니다. 본 화면과 작은 창에서 각각 1~180분으로 설정할 수 있으며 브라우저에 자동 저장됩니다. 현재 단계의 시간을 바꾸면 측정을 멈추고 해당 세션을 초기화하며, 누적 작업 시간은 유지합니다. 집중 종료 시 완료 횟수를 기록하고 휴식 준비로 전환합니다. 다음 단계는 시작 버튼을 눌러 진행합니다. 휴식은 작업 집중 시간에 포함되지 않습니다.
@@ -67,6 +71,6 @@ npm run desktop
 npm run dist:win
 ```
 
-`release/Chagok-1.0.0-Windows.exe`에 포터블 실행 파일을 생성합니다. 앱 소스는 Electron의 격리된 렌더러에서 실행하며 런타임을 함께 패키징합니다. GitHub Actions의 **Build Windows EXE** 워크플로가 Windows에서 빌드하고 `windows-latest` 릴리스에 EXE를 올립니다.
+`release/Chagok-1.1.0-Windows.exe`에 포터블 실행 파일을 생성합니다. 앱 소스는 Electron의 격리된 렌더러에서 실행하며 런타임을 함께 패키징합니다. GitHub Actions의 **Build Windows EXE** 워크플로가 Windows에서 빌드하고 `windows-latest` 릴리스에 EXE를 올립니다.
 
 현재 EXE는 코드 서명 인증서가 없는 빌드입니다. Windows에서 게시자 확인 경고가 표시될 수 있습니다.
