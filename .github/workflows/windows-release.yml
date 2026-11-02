@@ -33,7 +33,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Check Defender availability before building
-        shell: pwsh
+        shell: powershell
         run: ./scripts/scan-windows-release.ps1 -PreflightOnly
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -49,7 +49,7 @@ jobs:
           node --check desktop/preload.cjs
       - run: npm run dist:win
       - name: Scan with Microsoft Defender
-        shell: pwsh
+        shell: powershell
         run: ./scripts/scan-windows-release.ps1
       - name: Generate file checksums
         run: node scripts/release-checksums.mjs
