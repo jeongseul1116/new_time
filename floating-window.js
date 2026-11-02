@@ -62,9 +62,9 @@ body[data-timer-view="circle"] .timer-dial { display: block; position: absolute;
 .timer-dial .dial-track { stroke: #303033; }
 .timer-dial .dial-remaining { stroke: var(--accent); stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; }
 body[data-timer-view="circle"] .time-accent, body[data-timer-view="circle"] .pomo-track { display: none; }
-body[data-timer-view="circle"] #mini-timer { margin: 0; font-size: 26px; line-height: 32px; letter-spacing: -1px; z-index: 1; }
+body[data-timer-view="circle"] #mini-timer { display: none; }
 body[data-timer-view="circle"][data-long-time="true"] #mini-timer { font-size: 22px; }
-body[data-timer-view="circle"] #mini-timer-state { margin-top: 4px; font-size: 8px; z-index: 1; }
+body[data-timer-view="circle"] #mini-timer-state { display: none; }
 .task-panel { min-width: 0; display: grid; grid-template-rows: 18px 52px 12px; row-gap: 16px; }
 #mini-focus-name {
   margin: 0; font-size: 12px; line-height: 18px; font-weight: 400; color: #c5c5cb;

@@ -54,7 +54,8 @@ function syncFloating(){
  if(clockMode==='pomodoro'){const p=state.pomo;doc.getElementById('mini-timer-state').textContent=`${p.phase==='focus'?p.focusMinutes:p.breakMinutes}분 · ${p.phase==='focus'?'집중':'휴식'} ${p.started?'중':'준비'}`;}
  for(const phase of ['focus','break'])doc.getElementById('mini-pomo-'+phase).setAttribute('aria-pressed',String(state.pomo.phase===phase));
  const taskTitle=doc.getElementById('mini-focus-name');taskTitle.title=taskTitle.textContent;const progress=doc.getElementById('mini-pomo-progress');if(progress)progress.style.width=$('#pomo-progress').style.width;
- doc.title=($('#timer').textContent||'타이머')+' · 차곡';
+ doc.title=effectiveTimerView()==='circle'?'원형 타이머 · 차곡':($('#timer').textContent||'타이머')+' · 차곡';
+ doc.querySelector('.readout').setAttribute('aria-label',effectiveTimerView()==='circle'?`남은 시간 ${Math.round(remainingFraction()*100)}퍼센트`:'남은 시간');
 }
 $('#float-timer').onclick=async()=>{
  if(floatingWindow&&!floatingWindow.closed){floatingWindow.focus();return}
