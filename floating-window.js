@@ -37,7 +37,7 @@ button { border: 0; }
 }
 .settings-toggle:hover { background: #28282b; color: #fff; }
 .pomo-tabs {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 2px; margin: 0; border-radius: 8px; background: #28282b;
 }
 .pomo-tabs button {
@@ -115,6 +115,16 @@ body[data-clock-mode="pomodoro"] .task-footer { justify-content:center; }
 .picker-task span:first-child { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .picker-task small { flex-shrink:0;color:#999;font-size:9px; }
 .picker-empty { color:#999;font-size:11px;margin:12px; }
+body[data-clock-mode="reverse"] #mini-pomo-count,body[data-clock-mode="reverse"] .pomo-track,body[data-clock-mode="reverse"] .settings-toggle { visibility:hidden; }
+.reverse-composer { position:absolute;z-index:4;inset:60px 24px 16px;padding:10px 12px;background:#242426;border:1px solid #49494c;border-radius:10px;box-shadow:0 8px 24px #0008; }
+.reverse-form-heading { display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;line-height:18px; }
+.reverse-form-heading strong { font-weight:500; }
+.reverse-form-heading output { color:var(--accent);font-variant-numeric:tabular-nums;font-size:11px; }
+.reverse-composer textarea { display:block;resize:none;width:100%;height:40px;margin-top:8px;padding:6px 8px;border:1px solid #505054;border-radius:6px;background:#18181b;color:#f5f5f7;font:inherit;font-size:11px;line-height:16px; }
+.reverse-form-actions { display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px; }
+.reverse-form-actions span { flex:1;color:#ffb340;font-size:9px; }
+.reverse-form-actions button { padding:5px 10px;border-radius:6px;background:#3a3a3c;color:#ddd;font-size:10px;line-height:16px; }
+.reverse-form-actions button[type="submit"] { background:var(--accent);color:#151515; }
 @media (max-width: 459px) {
   body { padding: 20px; }
   .clock-layout { grid-template-columns: 40% minmax(0, 1fr); column-gap: 24px; }
@@ -138,9 +148,9 @@ const markup = `
     </button>
     </div>
   </div>
-  <div class="pomo-tabs" role="group" aria-label="집중 또는 휴식">
+  <div class="pomo-tabs" role="group" aria-label="시계 모드">
     <button id="mini-mode-timer">작업 타이머</button>
-    <button id="mini-mode-pomodoro">포모도로</button>
+    <button id="mini-mode-pomodoro">포모도로</button><button id="mini-mode-reverse">역추적</button>
   </div>
   <section class="readout" aria-label="남은 시간">
     <svg class="timer-dial" viewBox="0 0 114 114" aria-hidden="true"><circle class="dial-track" cx="57" cy="57" r="46"/><circle class="dial-remaining" id="mini-dial-remaining" cx="57" cy="57" r="46" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg>
@@ -169,9 +179,14 @@ const markup = `
 <section class="task-picker" id="mini-task-picker" aria-label="계획한 작업 목록" hidden>
   <div class="picker-heading"><strong>계획한 작업</strong><button id="mini-picker-plan">추가·설계 ↗</button><button id="mini-picker-close" aria-label="작업 목록 닫기">×</button></div>
   <div id="mini-task-list"></div>
-</section>`;
+</section>
+<form class="reverse-composer" id="mini-reverse-form" hidden>
+<div class="reverse-form-heading"><strong>어떤 작업을 했나요?</strong><output id="mini-reverse-form-duration"></output></div>
+<textarea id="mini-reverse-description" aria-label="역추적 작업 내용" maxlength="500" placeholder="방금 한 작업을 적어주세요." required></textarea>
+<div class="reverse-form-actions"><span id="mini-reverse-error" role="alert"></span><button id="mini-reverse-cancel" type="button">취소</button><button type="submit">기록 저장</button></div>
+</form>`;
 
-export function createFloatingClock(doc, { onAction, onDurationChange, onViewChange, onOpenPlanner, onSelectTask }) {
+export function createFloatingClock(doc, { onAction, onDurationChange, onViewChange, onOpenPlanner, onSelectTask, onReverseDraft, onReverseSave, onReverseCancel }) {
   doc.documentElement.lang = 'ko';
   doc.head.innerHTML = '<meta name="viewport" content="width=device-width,initial-scale=1"><title>차곡 · 시계</title>';
   const style = doc.createElement('style');
@@ -188,7 +203,7 @@ export function createFloatingClock(doc, { onAction, onDurationChange, onViewCha
   const picker = doc.getElementById('mini-task-picker');
   const pickerTrigger = doc.getElementById('mini-task-picker-toggle');
   const closePicker = () => { picker.hidden=true;pickerTrigger.setAttribute('aria-expanded','false'); };
-  pickerTrigger.onclick = () => { picker.hidden=!picker.hidden;pickerTrigger.setAttribute('aria-expanded',String(!picker.hidden));doc.getElementById('mini-settings').hidden=true; };
+  pickerTrigger.onclick = () => {if(doc.body.dataset.clockMode==='reverse'){onOpenPlanner?.();return}picker.hidden=!picker.hidden;pickerTrigger.setAttribute('aria-expanded',String(!picker.hidden));doc.getElementById('mini-settings').hidden=true; };
   doc.getElementById('mini-picker-close').onclick = closePicker;
   doc.getElementById('mini-picker-plan').onclick = () => { closePicker();onOpenPlanner?.(); };
   doc.getElementById('mini-task-list').onclick = event => {const button=event.target.closest('[data-task-id]');if(button){closePicker();onSelectTask(button.dataset.taskId)}};
@@ -203,14 +218,17 @@ export function createFloatingClock(doc, { onAction, onDurationChange, onViewCha
   trigger.onclick = () => {closePicker();setSettingsOpen(panel.hidden)};
   doc.getElementById('mini-settings-done').onclick = () => setSettingsOpen(false);
   doc.addEventListener('keydown', event => {
-    if (event.key === 'Escape'){closePicker();if(!panel.hidden)setSettingsOpen(false);}
+    if (event.key === 'Escape'){if(!doc.getElementById('mini-reverse-form').hidden)onReverseCancel();closePicker();if(!panel.hidden)setSettingsOpen(false);}
   });
   doc.addEventListener('click', event => {
     if (!panel.hidden && !panel.contains(event.target) && !trigger.contains(event.target)) setSettingsOpen(false);
   });
-  for (const id of ['toggle', 'reset', 'complete', 'pomo-focus', 'pomo-break', 'mode-timer', 'mode-pomodoro']) {
-    doc.getElementById('mini-' + id).onclick = () => onAction(id);
+  for (const id of ['toggle', 'reset', 'complete', 'pomo-focus', 'pomo-break', 'mode-timer', 'mode-pomodoro','mode-reverse']) {
+    doc.getElementById('mini-' + id).onclick = () => {if(id.startsWith('mode-')){closePicker();panel.hidden=true;trigger.setAttribute('aria-expanded','false')}onAction(id)};
   }
+  doc.getElementById('mini-reverse-description').oninput=event=>onReverseDraft(event.target.value);
+  doc.getElementById('mini-reverse-form').onsubmit=event=>{event.preventDefault();onReverseSave()};
+  doc.getElementById('mini-reverse-cancel').onclick=onReverseCancel;
   for (const view of ['numeric', 'circle']) {
     doc.getElementById('mini-view-' + view).onclick = () => onViewChange(view);
   }

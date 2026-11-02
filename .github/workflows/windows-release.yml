@@ -8,6 +8,8 @@ on:
       - 'desktop/**'
       - 'app.js'
       - 'floating-window.js'
+      - 'reverse-tracking.js'
+      - 'reverse-tracking.test.js'
       - 'index.html'
       - 'style.css'
       - 'package.json'
@@ -47,6 +49,9 @@ jobs:
           node --check floating-window.js
           node --check desktop/main.cjs
           node --check desktop/preload.cjs
+          node --check reverse-tracking.js
+      - name: Test reverse tracking state
+        run: npm test
       - run: npm run dist:win
       - name: Scan with Microsoft Defender
         shell: powershell

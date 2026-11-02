@@ -11,6 +11,7 @@ const ASSETS = new Map([
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/floating-window.js', ['floating-window.js', 'text/javascript; charset=utf-8']],
+  ['/reverse-tracking.js', ['reverse-tracking.js', 'text/javascript; charset=utf-8']],
 ]);
 
 // A stable origin keeps browser storage consistent across launches and updates.

@@ -1,11 +1,11 @@
 {
   "name": "new-time",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "test": "node --test",
+    "test": "node --test --test-isolation=none reverse-tracking.test.js",
     "desktop": "electron .",
     "dist:win": "electron-builder --win portable --x64"
   },
@@ -30,6 +30,7 @@
       "style.css",
       "app.js",
       "floating-window.js",
+      "reverse-tracking.js",
       "desktop/**/*",
       "package.json"
     ],
