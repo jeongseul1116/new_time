@@ -2,20 +2,6 @@ name: Build and verify Windows EXE
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'desktop/**'
-      - 'app.js'
-      - 'floating-window.js'
-      - 'reverse-tracking.js'
-      - 'reverse-tracking.test.js'
-      - 'index.html'
-      - 'style.css'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'scripts/**'
-      - '.github/workflows/windows-release.yml'
 
 permissions: {}
 

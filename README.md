@@ -2,6 +2,26 @@
 
 작업 설계 타이머, 포모도로, 작업 설계 역추적을 제공하는 작은 시계 앱입니다.
 
+## 링크로 바로 사용하기
+
+[차곡 웹앱 열기](https://jeongseul1116.github.io/new_time/)
+
+EXE나 Node.js 설치 없이 링크에서 작업 설계 타이머·포모도로·역추적을 모두 사용할 수 있습니다. 데스크톱 Chrome 또는 Edge에서 열면 **앱으로 설치** 버튼으로 바탕화면에도 추가할 수 있습니다. 설치는 선택 사항입니다.
+
+- **작은 창으로 띄우기**: 지원되는 Chrome·Edge에서는 항상 위에 표시됩니다. 앱 시작 후 이 버튼을 한 번 눌러주세요. 다른 브라우저에서는 일반 팝업으로 열립니다. 작은 창 사용 중에는 메인 앱을 열어두세요.
+- **오프라인 사용**: 첫 접속에서 준비가 끝나면 인터넷 연결 없이도 실행할 수 있습니다.
+- **새 버전 적용**: 실행 중 강제로 새로고침하지 않으며, 버튼을 눌렀을 때 현재 상태를 저장하고 업데이트합니다.
+- **기록 저장**: 현재 브라우저에 자동 저장합니다. 기존 EXE에 저장한 기록은 PC에 그대로 남으며 웹앱으로 자동 이전되지는 않습니다.
+
+## 웹앱 개발·배포
+
+```sh
+npm start
+npm run build:web
+```
+
+`_site/`에는 공개할 브라우저 파일만 들어갑니다. GitHub Pages의 **Source**를 **GitHub Actions**로 한 번 설정하면 이후 main 변경은 **Publish web app** 워크플로에서 자동 배포됩니다. EXE 빌드는 자동 실행하지 않으며 기존 Windows 앱 소스와 다운로드는 유지합니다.
+
 ## 화면 미리보기
 
 ![차곡 타이머 데스크톱 화면](screenshots/chagok-desktop.png)
@@ -13,7 +33,7 @@
 
 </details>
 
-## Windows에서 바로 실행
+## 기존 Windows EXE 사용
 
 [Windows EXE 다운로드 페이지](https://github.com/jeongseul1116/new_time/releases/latest)에서 **Chagok-1.3.0-Windows.exe**를 다운로드하고 더블클릭하세요. Node.js나 터미널이 필요 없는 Windows 10/11 64비트용 포터블 앱입니다. 업데이트할 때는 기존 차곡 앱을 완전히 종료한 뒤 새 EXE를 실행하세요. 저장된 작업과 기록은 유지됩니다.
 
@@ -95,7 +115,7 @@ npm run desktop
 npm run dist:win
 ```
 
-`release/Chagok-1.3.0-Windows.exe`에 포터블 실행 파일을 생성합니다. 앱 소스는 Electron의 격리된 렌더러에서 실행하며 런타임을 함께 패키징합니다. GitHub Actions의 **Build Windows EXE** 워크플로가 Windows에서 빌드하고 Windows Defender 검사와 빌드 출처 증명을 완료한 뒤 버전별 릴리스에 EXE를 올립니다. 이미 게시한 버전의 파일은 덮어쓰지 않습니다.
+`release/Chagok-1.3.0-Windows.exe`에 포터블 실행 파일을 생성합니다. 앱 소스는 Electron의 격리된 렌더러에서 실행하며 런타임을 함께 패키징합니다. 필요할 때 GitHub Actions의 Windows 빌드 워크플로를 수동 실행하면 Windows에서 빌드하고 Windows Defender 검사와 빌드 출처 증명을 완료한 뒤 버전별 릴리스에 EXE를 올립니다. 이미 게시한 버전의 파일은 덮어쓰지 않습니다.
 
 현재 EXE는 코드 서명 인증서가 없는 빌드입니다. Windows에서 게시자 확인 경고가 표시될 수 있습니다.
 

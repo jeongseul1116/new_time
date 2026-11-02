@@ -1,0 +1,31 @@
+{
+  "name": "차곡 · 작업과 시간을 설계하는 시계",
+  "short_name": "차곡",
+  "description": "작업 설계 타이머, 포모도로, 작업 설계 역추적을 링크 하나로 사용하세요.",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101012",
+  "theme_color": "#101012",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

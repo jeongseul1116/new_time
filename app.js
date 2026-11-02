@@ -231,3 +231,10 @@ $('#reverse-form').onsubmit=event=>{event.preventDefault();saveReverseRecord()};
 $('#reverse-cancel').onclick=cancelReverseEntry;
 $('#reverse-history-list').onclick=event=>{const button=event.target.closest('[data-reverse-delete]');if(!button||!confirm('이 역추적 기록을 삭제할까요?'))return;state.reverse.records=state.reverse.records.filter(record=>record.id!==button.dataset.reverseDelete);save();renderReverseHistory();updateTimer()};
 renderReverseHistory();
+
+window.addEventListener('chagok:prepare-update',event=>{
+ if(window.desktopClock?.isDesktop){event.preventDefault();return}
+ document.activeElement?.blur();pause();
+ if(!save()){event.preventDefault();return}
+ if(floatingWindow&&!floatingWindow.closed)floatingWindow.close();
+});
