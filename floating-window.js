@@ -58,8 +58,9 @@ body[data-long-time="true"] #mini-timer { font-size: 46px; letter-spacing: -2px;
 .timer-dial { display: none; }
 body[data-timer-view="circle"] .readout { position: relative; align-items: center; justify-content: center; }
 body[data-timer-view="circle"] .timer-dial { display: block; position: absolute; inset: 0; width: 114px; height: 114px; margin: auto; }
-.timer-dial .dial-track { fill: #303033; }
-.timer-dial .dial-remaining { fill: var(--accent); }
+.timer-dial circle { fill: none; stroke-width: 14; }
+.timer-dial .dial-track { stroke: #2c2c2f; }
+.timer-dial .dial-remaining { stroke: var(--accent); stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; }
 body[data-timer-view="circle"] .time-accent, body[data-timer-view="circle"] .pomo-track { display: none; }
 body[data-timer-view="circle"] #mini-timer { display: none; }
 body[data-timer-view="circle"][data-long-time="true"] #mini-timer { font-size: 22px; }
@@ -106,7 +107,7 @@ const markup = `
     <div class="heading-tools">
       <div class="view-switch" role="group" aria-label="타이머 표시 방식">
         <button id="mini-view-numeric" aria-label="숫자 보기" title="숫자 보기" aria-pressed="true">12</button>
-        <button id="mini-view-circle" aria-label="원형 보기" title="원형 보기" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" opacity=".3"/><path d="M8 8V2.5A5.5 5.5 0 0 1 13.5 8Z" fill="currentColor"/></svg></button>
+        <button id="mini-view-circle" aria-label="원형 보기" title="원형 보기" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" opacity=".3"/><path d="M8 2.5A5.5 5.5 0 0 1 13.5 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
       </div>
     <button class="settings-toggle" id="mini-settings-toggle" aria-label="시간 설정" aria-expanded="false" aria-controls="mini-settings">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m10 3 4 0 .6 2.5 2 .9 2.3-.8 2 3.5-1.8 1.7v2.4l1.8 1.7-2 3.5-2.3-.8-2 .9L14 21h-4l-.6-2.5-2-.9-2.3.8-2-3.5 1.8-1.7v-2.4L3.1 9.1l2-3.5 2.3.8 2-.9Z"/></svg>
@@ -118,7 +119,7 @@ const markup = `
     <button id="mini-pomo-break">휴식</button>
   </div>
   <section class="readout" aria-label="남은 시간">
-    <svg class="timer-dial" viewBox="0 0 114 114" aria-hidden="true"><circle class="dial-track" cx="57" cy="57" r="53"/><path class="dial-remaining" id="mini-dial-remaining"/></svg>
+    <svg class="timer-dial" viewBox="0 0 114 114" aria-hidden="true"><circle class="dial-track" cx="57" cy="57" r="46"/><circle class="dial-remaining" id="mini-dial-remaining" cx="57" cy="57" r="46" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg>
     <div class="time-accent" aria-hidden="true"></div>
     <span id="mini-timer"></span>
     <small id="mini-timer-state"></small>
@@ -175,16 +176,9 @@ export function createFloatingClock(doc, { onAction, onDurationChange, onViewCha
   }
 }
 
-// A true filled sector, measured clockwise from twelve o'clock.
-export function remainingSectorPath(fraction, center, radius) {
-  const portion = Math.max(0, Math.min(1, fraction));
-  if (portion === 0) return '';
-  const top = center - radius;
-  if (portion === 1) {
-    return `M ${center} ${top} A ${radius} ${radius} 0 1 1 ${center} ${center + radius} A ${radius} ${radius} 0 1 1 ${center} ${top} Z`;
-  }
-  const angle = -Math.PI / 2 + portion * Math.PI * 2;
-  const x = center + radius * Math.cos(angle);
-  const y = center + radius * Math.sin(angle);
-  return `M ${center} ${center} L ${center} ${top} A ${radius} ${radius} 0 ${portion > .5 ? 1 : 0} 1 ${x} ${y} Z`;
+// Hide an exhausted arc entirely; rounded caps must not leave an orange dot.
+export function updateRemainingRing(element, fraction) {
+  const remaining = Math.max(0, Math.min(1, fraction));
+  element.setAttribute('stroke-dashoffset', String(100 * (1 - remaining)));
+  element.setAttribute('visibility', remaining === 0 ? 'hidden' : 'visible');
 }

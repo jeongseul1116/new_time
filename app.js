@@ -1,4 +1,4 @@
-import { createFloatingClock, remainingSectorPath } from './floating-window.js';
+import { createFloatingClock, updateRemainingRing } from './floating-window.js';
 
 const $=s=>document.querySelector(s);
 let clockMode="pomodoro",floatingWindow=null;
@@ -49,7 +49,7 @@ function syncFloating(){
  doc.body.dataset.timerView=effectiveTimerView();
  for(const view of ['numeric','circle'])doc.getElementById('mini-view-'+view).setAttribute('aria-pressed',String(effectiveTimerView()===view));
  doc.getElementById('mini-view-circle').disabled=clockMode==='stopwatch';
- doc.getElementById('mini-dial-remaining').setAttribute('d',remainingSectorPath(remainingFraction(),57,53));
+ updateRemainingRing(doc.getElementById('mini-dial-remaining'),remainingFraction());
  doc.body.dataset.longTime=String($('#timer').textContent.length>5);
  if(clockMode==='pomodoro'){const p=state.pomo;doc.getElementById('mini-timer-state').textContent=`${p.phase==='focus'?p.focusMinutes:p.breakMinutes}분 · ${p.phase==='focus'?'집중':'휴식'} ${p.started?'중':'준비'}`;}
  for(const phase of ['focus','break'])doc.getElementById('mini-pomo-'+phase).setAttribute('aria-pressed',String(state.pomo.phase===phase));
@@ -119,7 +119,7 @@ function updateTimerView(){
  for(const type of ['numeric','circle'])$('#view-'+type).setAttribute('aria-pressed',String(view===type));
  $('#view-circle').disabled=clockMode==='stopwatch';
  const fraction=remainingFraction();
- $('#dial-remaining').setAttribute('d',remainingSectorPath(fraction,112,108));
+ updateRemainingRing($('#dial-remaining'),fraction);
  $('#timer-dial').setAttribute('aria-label',`남은 시간 ${Math.round(fraction*100)}퍼센트`);
 }
 function setTimerView(view){
