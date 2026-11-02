@@ -1,0 +1,46 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - 'app.js'
+      - 'floating-window.js'
+      - 'index.html'
+      - 'style.css'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/windows-release.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-release
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Chagok-Windows
+          path: release/*.exe
+          if-no-files-found: error
+      - name: Publish Windows download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release view windows-latest >/dev/null 2>&1 || gh release create windows-latest --title "차곡 · Windows 실행 파일" --notes "Windows 10/11 (64비트)용 포터블 실행 파일입니다. EXE를 다운로드하고 더블클릭해 실행하세요. Node.js 설치는 필요하지 않습니다."
+          gh release upload windows-latest release/*.exe --clobber

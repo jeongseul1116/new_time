@@ -13,7 +13,16 @@
 
 </details>
 
-## 실행
+## Windows에서 바로 실행
+
+[Windows EXE 다운로드 페이지](https://github.com/jeongseul1116/new_time/releases/tag/windows-latest)에서 **Chagok-1.0.0-Windows.exe**를 다운로드하고 더블클릭하세요. Node.js나 터미널이 필요 없는 Windows 10/11 64비트용 포터블 앱입니다.
+
+- 실행하면 480×210 작은 시계 창이 바로 열리고 항상 위에 표시됩니다.
+- 왼쪽 **타이머 ↗**를 누르면 코스와 작업을 설계하는 화면을 엽니다.
+- 집중·휴식 시간과 기록은 PC의 앱 데이터에 자동 저장됩니다.
+- 처음 실행할 때는 GitHub EXE의 압축 해제와 초기화에 잠시 시간이 걸릴 수 있습니다.
+
+## 웹 개발 모드 실행
 
 Node.js 24에서 외부 패키지 설치 없이 실행합니다.
 
@@ -49,3 +58,15 @@ npm start
 보기 변경은 실행·일시 정지 상태와 남은 시간에 영향을 주지 않으며 자동 저장됩니다. 포모도로 집중·휴식과 일반 타이머에서 사용할 수 있습니다. 종료 시간이 정해져 있지 않은 스톱워치는 숫자로 표시합니다.
 
 ![원형으로 보는 남은 시간](screenshots/chagok-floating-circle.png)
+
+## 데스크톱 개발 및 EXE 빌드
+
+```sh
+npm ci
+npm run desktop
+npm run dist:win
+```
+
+`release/Chagok-1.0.0-Windows.exe`에 포터블 실행 파일을 생성합니다. 앱 소스는 Electron의 격리된 렌더러에서 실행하며 런타임을 함께 패키징합니다. GitHub Actions의 **Build Windows EXE** 워크플로가 Windows에서 빌드하고 `windows-latest` 릴리스에 EXE를 올립니다.
+
+현재 EXE는 코드 서명 인증서가 없는 빌드입니다. Windows에서 게시자 확인 경고가 표시될 수 있습니다.

@@ -24,6 +24,7 @@ button { border: 0; }
   row-gap: 20px;
 }
 .time-heading { display: flex; align-items: center; justify-content: space-between; min-width: 0; }
+.time-heading h1 button { color: inherit; font: inherit; padding: 0; background: transparent; }
 .time-heading h1 { margin: 0; color: var(--accent); font-size: 13px; line-height: 20px; font-weight: 500; }
 .heading-tools { display: flex; align-items: center; gap: 8px; }
 .view-switch { display: grid; grid-template-columns: repeat(2, 24px); padding: 2px; background: #28282b; border-radius: 7px; }
@@ -142,13 +143,19 @@ const markup = `
   <label><span>휴식</span><input id="mini-break-minutes" type="number" min="1" max="180" aria-label="휴식 시간"> 분</label>
 </section>`;
 
-export function createFloatingClock(doc, { onAction, onDurationChange, onViewChange }) {
+export function createFloatingClock(doc, { onAction, onDurationChange, onViewChange, onOpenPlanner }) {
   doc.documentElement.lang = 'ko';
   doc.head.innerHTML = '<meta name="viewport" content="width=device-width,initial-scale=1"><title>차곡 · 시계</title>';
   const style = doc.createElement('style');
   style.textContent = styles;
   doc.head.append(style);
   doc.body.innerHTML = markup;
+
+  if (onOpenPlanner) {
+    const title = doc.querySelector('.time-heading h1');
+    title.innerHTML = '<button title="작업 설계 열기" aria-label="작업 설계 열기">타이머 ↗</button>';
+    title.firstElementChild.onclick = onOpenPlanner;
+  }
 
   const panel = doc.getElementById('mini-settings');
   const trigger = doc.getElementById('mini-settings-toggle');

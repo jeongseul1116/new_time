@@ -60,17 +60,18 @@ function syncFloating(){
 $('#float-timer').onclick=async()=>{
  if(floatingWindow&&!floatingWindow.closed){floatingWindow.focus();return}
  try{
-  const pinned='documentPictureInPicture' in window;
+  const pinned=!window.desktopClock?.isDesktop && 'documentPictureInPicture' in window;
   floatingWindow=pinned?await window.documentPictureInPicture.requestWindow({width:480,height:210}):window.open('','chagok-focus','popup=yes,width=480,height=210');
   if(!floatingWindow){toast('팝업이 차단되었어요. 이 사이트의 팝업을 허용해 주세요.');return}
   const doc=floatingWindow.document;
   createFloatingClock(doc, {
     onAction: id => { document.getElementById(id).click(); syncFloating(); },
     onDurationChange: (id, value) => { setPomoMinutes(id, value); syncFloating(); },
-    onViewChange: view => setTimerView(view)
+    onViewChange: view => setTimerView(view),
+    onOpenPlanner: window.desktopClock?.isDesktop ? () => window.desktopClock.showPlanner() : undefined
   });
   syncFloating();
-  if(!pinned)toast('별도 창을 열었어요. 항상 위 고정은 데스크톱 Chrome·Edge에서 지원됩니다.');
+  if(!pinned&&!window.desktopClock?.isDesktop)toast('별도 창을 열었어요. 항상 위 고정은 데스크톱 Chrome·Edge에서 지원됩니다.');
  }catch(error){toast('작은 창을 열지 못했어요. 데스크톱 Chrome·Edge에서 다시 시도해 주세요.');}
 };
 
@@ -128,3 +129,6 @@ function setTimerView(view){
 }
 $('#view-numeric').onclick=()=>setTimerView('numeric');
 $('#view-circle').onclick=()=>setTimerView('circle');
+
+// The desktop controller opens its compact native clock on launch.
+if(window.desktopClock?.isDesktop)queueMicrotask(()=>$('#float-timer').click());

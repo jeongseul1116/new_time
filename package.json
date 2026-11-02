@@ -1,1 +1,53 @@
-{"name":"new-time","version":"1.0.0","private":true,"scripts":{"dev":"node server.mjs","start":"node server.mjs","test":"node --test"},"type":"module"}
+{
+  "name": "new-time",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node --test",
+    "desktop": "electron .",
+    "dist:win": "electron-builder --win portable --x64"
+  },
+  "type": "module",
+  "devDependencies": {
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0"
+  },
+  "description": "작업 설계와 집중 시간을 위한 작은 시계",
+  "main": "desktop/main.cjs",
+  "author": "Chagok",
+  "license": "UNLICENSED",
+  "build": {
+    "appId": "com.chagok.clock",
+    "productName": "Chagok",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "style.css",
+      "app.js",
+      "floating-window.js",
+      "desktop/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Chagok-${version}-Windows.exe",
+      "signAndEditExecutable": false,
+      "icon": "desktop/icon.ico"
+    },
+    "portable": {
+      "requestExecutionLevel": "user"
+    }
+  }
+}
