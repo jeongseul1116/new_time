@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build and verify Windows EXE
 
 on:
   workflow_dispatch:
@@ -12,35 +12,110 @@ on:
       - 'style.css'
       - 'package.json'
       - 'package-lock.json'
+      - 'scripts/**'
       - '.github/workflows/windows-release.yml'
 
-permissions:
-  contents: write
+permissions: {}
 
 concurrency:
   group: windows-release
   cancel-in-progress: false
 
 jobs:
-  windows:
+  build:
     runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npm run dist:win
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Chagok-Windows
-          path: release/*.exe
-          if-no-files-found: error
-      - name: Publish Windows download
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Check application syntax
         shell: bash
         run: |
-          gh release view windows-latest >/dev/null 2>&1 || gh release create windows-latest --title "차곡 · Windows 실행 파일" --notes "Windows 10/11 (64비트)용 포터블 실행 파일입니다. EXE를 다운로드하고 더블클릭해 실행하세요. Node.js 설치는 필요하지 않습니다."
-          gh release upload windows-latest release/*.exe --clobber
+          node --check app.js
+          node --check floating-window.js
+          node --check desktop/main.cjs
+          node --check desktop/preload.cjs
+      - run: npm run dist:win
+      - name: Scan with Microsoft Defender
+        shell: pwsh
+        run: ./scripts/scan-windows-release.ps1
+      - name: Generate file checksums
+        run: node scripts/release-checksums.mjs
+      - name: Attest executable build provenance
+        id: provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: release/*.exe
+      - name: Save provenance bundle
+        shell: pwsh
+        env:
+          BUNDLE_PATH: ${{ steps.provenance.outputs.bundle-path }}
+        run: Copy-Item $env:BUNDLE_PATH release/build-provenance.jsonl
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: verified-windows-release
+          path: |
+            release/*.exe
+            release/SHA256SUMS.txt
+            release/Defender-scan.json
+            release/build-provenance.jsonl
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: verified-windows-release
+          path: release
+      - name: Verify downloaded release checksums
+        working-directory: release
+        run: sha256sum --check SHA256SUMS.txt
+      - name: Publish verified download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          exe=$(find release -maxdepth 1 -name '*.exe' -printf '%f\n')
+          version=${exe#Chagok-}
+          version=${version%-Windows.exe}
+          tag="v${version}"
+          cat > release-notes.md <<'NOTES'
+          Windows 10/11 64비트용 포터블 앱입니다. 기존 앱을 완전히 종료한 뒤 EXE를 실행하세요.
+
+          배포 검증:
+          - Microsoft Defender 사용자 지정 검사 완료 후 게시
+          - SHA256SUMS.txt: 다운로드 파일의 변조 여부 확인
+          - Defender-scan.json: 검사 엔진·서명 버전과 결과
+          - build-provenance.jsonl: GitHub 빌드 출처 증명
+
+          현재 EXE는 게시자 코드 서명이 없습니다. 위 검증은 SmartScreen 경고를 제거하거나 파일의 완전한 안전성을 보장하지 않습니다.
+          NOTES
+          if gh release view "$tag" >/dev/null 2>&1; then
+            draft=$(gh release view "$tag" --json isDraft --jq .isDraft)
+            commit=$(gh release view "$tag" --json targetCommitish --jq .targetCommitish)
+            if [[ "$draft" != "true" || "$commit" != "$GITHUB_SHA" ]]; then
+              echo "Existing published release or a different commit will not be overwritten."
+              exit 1
+            fi
+          else
+            gh release create "$tag" --draft --target "$GITHUB_SHA" --title "차곡 ${version} · Windows" --notes-file release-notes.md
+          fi
+          # Only an unpublished draft of this exact commit can be resumed.
+          gh release upload "$tag" release/*.exe release/SHA256SUMS.txt release/Defender-scan.json release/build-provenance.jsonl --clobber
+          gh release edit "$tag" --draft=false --latest

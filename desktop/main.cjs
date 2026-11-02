@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, net, protocol } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, net, protocol, session } = require('electron');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
@@ -214,6 +214,9 @@ if (!app.requestSingleInstanceLock()) {
     else showPlanner();
   });
   app.whenReady().then(async () => {
+    // This offline timer needs no camera, microphone, location, or other browser permissions.
+    session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    session.defaultSession.setPermissionCheckHandler(() => false);
     await installProtocol();
     ipcMain.handle('clock:show-planner', event => {
       const trusted = [plannerWindow, clockWindow].some(window =>
